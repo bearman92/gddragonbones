@@ -4,7 +4,7 @@
 #include "core/os/file_access.h"
 #include "core/os/os.h"
 
-#include "method_bind_ext.gen.inc"
+#include "core/method_bind_ext.gen.inc"
 
 #if (VERSION_MAJOR == 3)
     #define CLASS_BIND_GODO  ClassDB
@@ -48,13 +48,13 @@ char*    __load_file(const String& _file_path)
     ERR_FAIL_COND_V(!__p_f, nullptr);
     ERR_FAIL_COND_V(!__p_f->get_len(), nullptr);
 
-   // mem
+    // mem
     char* __p_data = (char*)memalloc(__p_f->get_len() + 1);
     ERR_FAIL_COND_V(!__p_data, nullptr);
 
     __p_f->get_buffer((uint8_t *)__p_data, __p_f->get_len());
     __p_data[__p_f->get_len()] = 0x00;
-  
+
     memdelete(__p_f);
 
     return __p_data;
@@ -112,8 +112,8 @@ GDDragonBones::~GDDragonBones()
 
     if(p_factory)
     {
-      memdelete(p_factory);
-      p_factory = nullptr;
+        memdelete(p_factory);
+        p_factory = nullptr;
     }
 }
 
@@ -143,8 +143,8 @@ void GDDragonBones::dispatch_snd_event(const String& _str_type, const EventObjec
 #endif
         return;
 
-   if(_str_type == EventObject::SOUND_EVENT)
-       emit_signal("dragon_anim_snd_event", String(_p_value->animationState->name.c_str()), String(_p_value->name.c_str()));
+    if(_str_type == EventObject::SOUND_EVENT)
+        emit_signal("dragon_anim_snd_event", String(_p_value->animationState->name.c_str()), String(_p_value->name.c_str()));
 }
 
 void GDDragonBones::dispatch_event(const String& _str_type, const EventObject* _p_value)
@@ -180,7 +180,7 @@ void GDDragonBones::set_resource(Ref<GDDragonBones::GDDragonBonesResource> _p_da
     String __old_texture_path = "";
     if(m_res.is_valid())
         __old_texture_path = m_res->str_default_tex_path;
-   else if(_p_data.is_valid())
+    else if(_p_data.is_valid())
         __old_texture_path = _p_data->str_default_tex_path;
 
     if (m_res == _p_data)
@@ -275,7 +275,7 @@ float GDDragonBones::get_opacity() const
 {
 #ifdef TOOLS_ENABLED
     if(p_armature)
-         p_armature->update_childs(true);
+        p_armature->update_childs(true);
 #endif
     return GDOwnerNode::get_opacity();
 }
@@ -470,7 +470,7 @@ void GDDragonBones::_notification(int _what)
                 if (b_processing)
                     p_factory->update(get_physics_process_delta_time());
         }
-         break;
+        break;
 #else
         case NOTIFICATION_FIXED_PROCESS:
         {
@@ -526,14 +526,14 @@ void  GDDragonBones::play_from_time(float _f_time)
 {
     play();
     if(b_playing)
-         p_armature->getAnimation()->gotoAndPlayByTime(str_curr_anim.ascii().get_data(), _f_time, c_loop);
+        p_armature->getAnimation()->gotoAndPlayByTime(str_curr_anim.ascii().get_data(), _f_time, c_loop);
 }
 
 void   GDDragonBones::play_from_progress(float _f_progress)
 {
     play();
     if(b_playing)
-         p_armature->getAnimation()->gotoAndPlayByProgress(str_curr_anim.ascii().get_data(), CLAMP(_f_progress, 0, 1.f), c_loop);
+        p_armature->getAnimation()->gotoAndPlayByProgress(str_curr_anim.ascii().get_data(), CLAMP(_f_progress, 0, 1.f), c_loop);
 }
 
 bool GDDragonBones::has_anim(const String& _str_anim) const
@@ -618,8 +618,8 @@ void GDDragonBones::set_texture(const Ref<Texture>& _p_texture) {
     if (_p_texture.is_valid()
             && m_texture_atlas.is_valid()
             && (_p_texture == m_texture_atlas
-               || m_texture_atlas->get_height() != _p_texture->get_height()
-               || m_texture_atlas->get_width()  != _p_texture->get_width()))
+                || m_texture_atlas->get_height() != _p_texture->get_height()
+                || m_texture_atlas->get_width()  != _p_texture->get_width()))
         return;
 
     m_texture_atlas = _p_texture;
@@ -667,8 +667,8 @@ bool GDDragonBones::_set(const StringName& _str_name, const Variant& _c_r_value)
         }
     }
 
-   else if (name == "playback/loop")
-   {
+    else if (name == "playback/loop")
+    {
         c_loop = _c_r_value;
         if (b_inited && b_playing)
         {
@@ -679,7 +679,7 @@ bool GDDragonBones::_set(const StringName& _str_name, const Variant& _c_r_value)
 
     else if (name == "playback/progress")
     {
-       seek(_c_r_value);
+        seek(_c_r_value);
     }
 
     return true;
@@ -824,9 +824,9 @@ void GDDragonBones::_get_property_list(List<PropertyInfo>* _p_list) const
     String __str_hint;
     for (List<String>::Element* __p_E = __l_names.front(); __p_E; __p_E = __p_E->next())
     {
-       if (__p_E != __l_names.front())
-           __str_hint += ",";
-           __str_hint += __p_E->get();
+        if (__p_E != __l_names.front())
+            __str_hint += ",";
+            __str_hint += __p_E->get();
     }
 
     _p_list->push_back(PropertyInfo(Variant::STRING, "playback/curr_animation", PROPERTY_HINT_ENUM, __str_hint));
