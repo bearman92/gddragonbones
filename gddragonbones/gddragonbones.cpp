@@ -42,7 +42,7 @@ GDDragonBones::GDDragonBonesResource::~GDDragonBonesResource()
     }
 }
 
-char*    __load_file(const String& _file_path)
+char* __load_file(const String& _file_path)
 {
     FileAccess* __p_f = FileAccess::open(_file_path, FileAccess::READ);
     ERR_FAIL_COND_V(!__p_f, nullptr);
@@ -60,19 +60,19 @@ char*    __load_file(const String& _file_path)
     return __p_data;
 }
 
-void       GDDragonBones::GDDragonBonesResource::set_def_texture_path(const String& _path)
+void GDDragonBones::GDDragonBonesResource::set_def_texture_path(const String& _path)
 {
     str_default_tex_path = _path;
 }
 
-bool       GDDragonBones::GDDragonBonesResource::load_texture_atlas_data(const String& _path)
+bool GDDragonBones::GDDragonBonesResource::load_texture_atlas_data(const String& _path)
 {
     p_data_texture_atlas = __load_file(_path);
     ERR_FAIL_COND_V(!p_data_texture_atlas, false);
     return true;
 }
 
-bool       GDDragonBones::GDDragonBonesResource::load_bones_data(const String& _path)
+bool GDDragonBones::GDDragonBonesResource::load_bones_data(const String& _path)
 {
     p_data_bones = __load_file(_path);
     ERR_FAIL_COND_V(!p_data_bones, false);
@@ -491,12 +491,12 @@ void GDDragonBones::_notification(int _what)
     }
 }
 
-void    GDDragonBones::_reset()
+void GDDragonBones::_reset()
 {
     p_armature->getAnimation()->reset();
 }
 
-void   GDDragonBones::play(bool _b_play)
+void GDDragonBones::play(bool _b_play)
 {
     b_playing = _b_play;
     if(!_b_play)
@@ -522,14 +522,14 @@ void   GDDragonBones::play(bool _b_play)
     }
 }
 
-void  GDDragonBones::play_from_time(float _f_time)
+void GDDragonBones::play_from_time(float _f_time)
 {
     play();
     if(b_playing)
         p_armature->getAnimation()->gotoAndPlayByTime(str_curr_anim.ascii().get_data(), _f_time, c_loop);
 }
 
-void   GDDragonBones::play_from_progress(float _f_progress)
+void GDDragonBones::play_from_progress(float _f_progress)
 {
     play();
     if(b_playing)
@@ -595,6 +595,32 @@ String GDDragonBones::get_current_animation() const
     return String(p_armature->getAnimation()->getLastAnimationName().c_str());
 }
 
+bool GDDragonBones::set_current_animation(const Variant& animation_name)
+{
+	if (str_curr_anim == animation_name)
+		return false;
+
+	str_curr_anim = animation_name;
+	if (b_inited) {
+		if (str_curr_anim == "[none]")
+			stop();
+		else if (has_anim(str_curr_anim)) {
+			if (b_playing || b_try_playing)
+			{
+				play();
+				return true;
+			}
+			else
+			{
+				p_armature->getAnimation()->gotoAndStopByProgress(str_curr_anim.ascii().get_data());
+				return false;
+			}
+		}
+	}
+
+	return false;
+}
+
 void GDDragonBones::_set_process(bool _b_process, bool _b_force)
 {
     if (b_processing == _b_process && !_b_force)
@@ -647,7 +673,7 @@ bool GDDragonBones::_set(const StringName& _str_name, const Variant& _c_r_value)
 {
     String name = _str_name;
 
-    if (name == "playback/curr_animation")
+    if (name == "playback_curr_animation")
     {
         if(str_curr_anim == _c_r_value)
             return false;
@@ -667,7 +693,7 @@ bool GDDragonBones::_set(const StringName& _str_name, const Variant& _c_r_value)
         }
     }
 
-    else if (name == "playback/loop")
+    else if (name == "playback_loop")
     {
         c_loop = _c_r_value;
         if (b_inited && b_playing)
@@ -677,7 +703,7 @@ bool GDDragonBones::_set(const StringName& _str_name, const Variant& _c_r_value)
         }
     }
 
-    else if (name == "playback/progress")
+    else if (name == "playback_progress")
     {
         seek(_c_r_value);
     }
@@ -690,11 +716,11 @@ bool GDDragonBones::_get(const StringName& _str_name, Variant &_r_ret) const
 
     String __name = _str_name;
 
-    if (__name == "playback/curr_animation")
+    if (__name == "playback_curr_animation")
         _r_ret = str_curr_anim;
-    else if (__name == "playback/loop")
+    else if (__name == "playback_loop")
         _r_ret = c_loop;
-    else if (__name == "playback/progress")
+    else if (__name == "playback_progress")
         _r_ret = get_progress();
     return true;
 }
@@ -741,6 +767,7 @@ void GDDragonBones::_bind_methods()
     CLASS_BIND_GODO::bind_method(METH("is_playing"), &GDDragonBones::is_playing);
 
     CLASS_BIND_GODO::bind_method(METH("get_current_animation"), &GDDragonBones::get_current_animation);
+	CLASS_BIND_GODO::bind_method(METH("set_current_animation"), &GDDragonBones::set_current_animation);
 
     CLASS_BIND_GODO::bind_method(METH("seek", "pos"), &GDDragonBones::seek);
     CLASS_BIND_GODO::bind_method(METH("tell"), &GDDragonBones::tell);
@@ -776,12 +803,13 @@ void GDDragonBones::_bind_methods()
 
     ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "resource", PROPERTY_HINT_RESOURCE_TYPE, "GDDragonBonesResource"), _SCS("set_resource"), _SCS("get_resource"));
 
-    ADD_PROPERTY(PropertyInfo(Variant::INT, "playback/process_mode", PROPERTY_HINT_ENUM, "Fixed,Idle"), _SCS("set_animation_process_mode"), _SCS("get_animation_process_mode"));
-    ADD_PROPERTY(PropertyInfo(Variant::REAL, "playback/speed", PROPERTY_HINT_RANGE, "0,10,0.01"), _SCS("set_speed"), _SCS("get_speed"));
-    ADD_PROPERTY(PropertyInfo(Variant::REAL, "playback/progress", PROPERTY_HINT_RANGE, "-100,100,0.010"), _SCS("seek"), _SCS("get_progress"));
-    ADD_PROPERTY(PropertyInfo(Variant::BOOL, "playback/play"), _SCS("play"), _SCS("is_playing"));
+	ADD_GROUP("Playback", "playback_");
+    ADD_PROPERTY(PropertyInfo(Variant::INT, "playback_process_mode", PROPERTY_HINT_ENUM, "Fixed,Idle"), _SCS("set_animation_process_mode"), _SCS("get_animation_process_mode"));
+    ADD_PROPERTY(PropertyInfo(Variant::REAL, "playback_speed", PROPERTY_HINT_RANGE, "0,10,0.01"), _SCS("set_speed"), _SCS("get_speed"));
+    ADD_PROPERTY(PropertyInfo(Variant::REAL, "playback_progress", PROPERTY_HINT_RANGE, "-100,100,0.010"), _SCS("seek"), _SCS("get_progress"));
+    ADD_PROPERTY(PropertyInfo(Variant::BOOL, "playback_play"), _SCS("play"), _SCS("is_playing"));
 
-    ADD_PROPERTY(PropertyInfo(Variant::BOOL, "childs use this material"), _SCS("set_inherit_material"), _SCS("is_material_inherited"));
+    ADD_PROPERTY(PropertyInfo(Variant::BOOL, "inherit_child_material"), _SCS("set_inherit_material"), _SCS("is_material_inherited"));
 
     ADD_SIGNAL(MethodInfo("dragon_anim_start", PropertyInfo(Variant::STRING, "anim")));
     ADD_SIGNAL(MethodInfo("dragon_anim_complete", PropertyInfo(Variant::STRING, "anim")));
@@ -829,6 +857,6 @@ void GDDragonBones::_get_property_list(List<PropertyInfo>* _p_list) const
             __str_hint += __p_E->get();
     }
 
-    _p_list->push_back(PropertyInfo(Variant::STRING, "playback/curr_animation", PROPERTY_HINT_ENUM, __str_hint));
-    _p_list->push_back(PropertyInfo(Variant::INT, "playback/loop", PROPERTY_HINT_RANGE, "-1,100,1"));
+    _p_list->push_back(PropertyInfo(Variant::STRING, "playback_curr_animation", PROPERTY_HINT_ENUM, __str_hint));
+    _p_list->push_back(PropertyInfo(Variant::INT, "playback_loop", PROPERTY_HINT_RANGE, "-1,100,1"));
 }
